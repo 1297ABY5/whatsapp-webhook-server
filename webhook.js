@@ -8,7 +8,7 @@ app.use(bodyParser.json());
 const VERIFY_TOKEN = "unicorn@2024";
 const WHATSAPP_TOKEN = "EAAc56xZCJD84BO9Y2FjTZCpga1IbE0WT9ZCfGKJSjQJ2mHadWUUtmZBYV3gILGDbGo9UapiBBbPM06ZB119eqjaKpWIWrwLLGlXW0Oq2tNHy38f1lsZCmYs6C4BUF4bs6gnPuYL1R91UFydhrkDbJFzokqkUnv0nsgrjfeLRZCL2KJf6gnn6T3ySgVzZAB6tG8bmyjjNVWrAG4cNvNsfA6PT2fOu8G1reEPvCVqZBXIQUoEOlMZAp6";
 const PHONE_NUMBER_ID = "545308368676274";
-const OPENAI_API_KEY = "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";
+const OPENAI_API_KEY = "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";
 
 // Webhook verification
 app.get("/webhook", (req, res) => {
