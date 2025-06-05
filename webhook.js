@@ -1,11 +1,12 @@
 // webhook.js
+
 const express = require("express");
 const bodyParser = require("body-parser");
 
 const app = express();
 app.use(bodyParser.json());
 
-const VERIFY_TOKEN = "unicorn@2024"; // This should match what you enter in Meta Webhook setup
+const VERIFY_TOKEN = "unicorn@2024"; // Must match Meta webhook setup
 
 // Webhook verification
 app.get("/webhook", (req, res) => {
@@ -13,16 +14,19 @@ app.get("/webhook", (req, res) => {
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode && token === VERIFY_TOKEN) {
-    console.log("Webhook verified!");
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("✅ WEBHOOK_VERIFIED");
     res.status(200).send(challenge);
   } else {
-    res.status(403).send("Forbidden");
+    res.sendStatus(403);
   }
 });
 
 // Receiving messages from WhatsApp
 app.post("/webhook", (req, res) => {
+  console.log("🔥 Webhook Payload Received:");
+  console.log(JSON.stringify(req.body, null, 2)); // This line prints full JSON
+
   const entry = req.body.entry?.[0];
   const changes = entry?.changes?.[0];
   const value = changes?.value;
@@ -31,48 +35,15 @@ app.post("/webhook", (req, res) => {
   if (messages) {
     messages.forEach((msg) => {
       console.log("💬 Received Message:", msg);
-      // You can add logic here to act on specific keywords, etc.
+      // You can act on messages here
     });
   }
 
   res.sendStatus(200);
 });
 
-// Port for local testing or deployment
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Webhook server running on port ${PORT}`);
-});
-
-const bodyParser = require('body-parser');
-const app = express();
-
-app.use(bodyParser.json());
-
-const VERIFY_TOKEN = "unicorn@2024";
-
-// Verification endpoint
-app.get('/webhook', (req, res) => {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-        console.log('WEBHOOK_VERIFIED');
-        res.status(200).send(challenge);
-    } else {
-        res.sendStatus(403);
-    }
-});
-
-// Receiving webhook messages
-app.post('/webhook', (req, res) => {
-    console.log("🔥 Webhook Payload Received:");
-    console.log(JSON.stringify(req.body, null, 2));  // <--- THIS LINE IS KEY
-    res.sendStatus(200);
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Webhook server running on port ${PORT}`);
+  console.log(`🚀 Webhook server running on port ${PORT}`);
 });
