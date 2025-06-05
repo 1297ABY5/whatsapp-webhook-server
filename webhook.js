@@ -24,54 +24,62 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// Incoming message handler
+// Handle incoming WhatsApp messages
 app.post("/webhook", async (req, res) => {
-  const entry = req.body.entry?.[0];
-  const changes = entry?.changes?.[0];
-  const message = changes?.value?.messages?.[0];
-  const from = message?.from;
-  const text = message?.text?.body;
+  try {
+    const entry = req.body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const message = changes?.value?.messages?.[0];
+    const from = message?.from;
+    const text = message?.text?.body;
 
-  if (text && from) {
-    console.log(`💬 Received from ${from}: ${text}`);
+    if (text && from) {
+      console.log(`💬 Received from ${from}: ${text}`);
 
-    // ChatGPT-style reply
-    const openaiRes = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: text }],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
+      // Get ChatGPT reply
+      const openaiRes = await axios.post(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "system", content: "You are a helpful and professional operations manager." },
+            { role: "user", content: text }
+          ]
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
-    const reply = openaiRes.data.choices[0].message.content;
+      const reply = openaiRes.data.choices?.[0]?.message?.content || "Sorry, I couldn't process that.";
 
-    // Send reply via WhatsApp
-    await axios.post(
-      `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
-      {
-        messaging_product: "whatsapp",
-        to: from,
-        text: { body: reply },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json",
+      // Send reply back via WhatsApp
+      await axios.post(
+        `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
+        {
+          messaging_product: "whatsapp",
+          to: from,
+          text: { body: reply }
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
-    console.log("✅ Replied:", reply);
+      console.log("✅ Replied:", reply);
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("❌ Error in webhook handler:", error.response?.data || error.message);
+    res.sendStatus(500);
   }
-
-  res.sendStatus(200);
 });
 
 // Start server
