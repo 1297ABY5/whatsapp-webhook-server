@@ -1,14 +1,15 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const axios = require("axios");
+require("dotenv").config();
 
 const app = express();
 app.use(bodyParser.json());
 
-const VERIFY_TOKEN = "unicorn@2024";
-const WHATSAPP_TOKEN = "EAAc56xZCJD84BO9Y2FjTZCpga1IbE0WT9ZCfGKJSjQJ2mHadWUUtmZBYV3gILGDbGo9UapiBBbPM06ZB119eqjaKpWIWrwLLGlXW0Oq2tNHy38f1lsZCmYs6C4BUF4bs6gnPuYL1R91UFydhrkDbJFzokqkUnv0nsgrjfeLRZCL2KJf6gnn6T3ySgVzZAB6tG8bmyjjNVWrAG4cNvNsfA6PT2fOu8G1reEPvCVqZBXIQUoEOlMZAp6";
-const PHONE_NUMBER_ID = "545308368676274";
-const OPENAI_API_KEY = "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";
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Webhook verification
 app.get("/webhook", (req, res) => {
@@ -24,7 +25,7 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// Handle incoming WhatsApp messages
+// Incoming message handler
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
@@ -54,9 +55,9 @@ app.post("/webhook", async (req, res) => {
         }
       );
 
-      const reply = openaiRes.data.choices?.[0]?.message?.content || "Sorry, I couldn't process that.";
+      const reply = openaiRes.data.choices[0].message.content;
 
-      // Send reply back via WhatsApp
+      // Send reply via WhatsApp
       await axios.post(
         `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
         {
@@ -76,8 +77,8 @@ app.post("/webhook", async (req, res) => {
     }
 
     res.sendStatus(200);
-  } catch (error) {
-    console.error("❌ Error in webhook handler:", error.response?.data || error.message);
+  } catch (err) {
+    console.error("❌ Error in webhook handler:", err.response?.data || err.message);
     res.sendStatus(500);
   }
 });
